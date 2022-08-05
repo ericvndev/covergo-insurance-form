@@ -11,13 +11,14 @@
 		"lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"@headlessui/vue": "^1.6.7",
-		"@heroicons/vue": "^1.0.6",
 		"vue": "^3.2.37",
 		"vue-router": "^4.1.2"
 	},
 	"devDependencies": {
+		"@headlessui/vue": "^1.6.7",
+		"@heroicons/vue": "^1.0.6",
 		"@rushstack/eslint-patch": "^1.1.0",
+		"@tailwindcss/forms": "^0.5.2",
 		"@types/jsdom": "^16.2.14",
 		"@types/node": "^16.11.45",
 		"@typescript-eslint/eslint-plugin": "^5.32.0",

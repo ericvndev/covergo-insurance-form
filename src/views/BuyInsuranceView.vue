@@ -4,17 +4,33 @@ import { useRouter } from 'vue-router';
 import CallToAction from '@/components/CallToAction.vue';
 import MainForm from '@/components/MainForm.vue';
 import FormSummary from '@/components/FormSummary.vue';
-
-interface FormData {
-	name: string;
-	age: number;
-	country: string;
-}
+import type FormData from '@/types/FormData';
+import type ServerData from '@/types/ServerData';
 
 const router = useRouter();
 
-const step: number = ref(parseInt(router.currentRoute.value.query.step) || 0);
-const formData: FormData = ref({
+const dataFromServer: ServerData = {
+	countries: [
+		{
+			name: 'Hong Kong',
+			currencyCode: 'HKD',
+			exchangeRate: 1,
+		},
+		{
+			name: 'USA',
+			currencyCode: 'USD',
+			exchangeRate: 2
+		},
+		{
+			name: 'Australia',
+			currencyCode: 'AUD',
+			exchangeRate: 3
+		}
+	]
+};
+
+const step = ref<number>(parseInt(router.currentRoute.value.query.step?.toString() || '0'));
+const formData = ref<FormData>({
 	name: '',
 	age: 0,
 	country: '',
@@ -22,10 +38,10 @@ const formData: FormData = ref({
 
 // Watch for route changes when user click Back button also
 watch(router.currentRoute, (currentRoute) => {
-	step.value = parseInt(currentRoute.query.step);
+	step.value = parseInt(currentRoute.query.step?.toString() || '0');
 });
 
-function updateStep(isUp: boolean): void {
+function updateStep(isUp: boolean): number {
 	if (isUp) {
 		step.value += 1;
 	} else {
@@ -60,10 +76,10 @@ function submit(): void {
 			<CallToAction @goNext="goNext" />
 		</div>
 		<div v-else-if="step === 1">
-			<MainForm @data="formData" @goNext="goNext" @goBack="goBack" />
+			<MainForm :data="formData" :serverData="dataFromServer" @goNext="goNext" @goBack="goBack" />
 		</div>
 		<div v-else-if="step === 2">
-			<FormSummary @data="formData" @buy="submit" @goBack="goBack" />
+			<FormSummary :data="formData" :serverData="dataFromServer" @buy="submit" @goBack="goBack" />
 		</div>
 	</div>
 </template >
