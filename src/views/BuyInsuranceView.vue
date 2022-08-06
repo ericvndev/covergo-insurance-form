@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import CallToAction from '@/components/CallToAction.vue';
 import MainForm from '@/components/MainForm.vue';
@@ -68,6 +68,13 @@ onMounted(() => {
 	}, 300);
 });
 
+function handleDataChange(key: string, newValue: string | number): void {
+	formData.value = {
+		...formData.value,
+		[key]: newValue,
+	};
+}
+
 function updateStep(isUp: boolean): number {
 	let newValue = step.value;
 	if (isUp) {
@@ -100,6 +107,39 @@ function goBack(): number {
 function submit(): void {
 	alert('submitted');
 }
+
+function calculateStandardPremium(): number {
+	if (!formData.value.age) {
+		return 0;
+	}
+	if (formData.value.age > 0 && formData.value.country) {
+		const country = dataFromServer.countries.find(
+			(country) => country.currencyCode === formData.value.country
+		);
+		if (country) {
+			return formData.value.age * 10 * country.exchangeRate;
+		}
+	}
+	return 0;
+}
+
+const standardPremium = computed(() => {
+	return calculateStandardPremium();
+});
+
+const finalPremium = computed(() => {
+	const foundPackage = dataFromServer.packages.find(
+		(pk) => pk.id === formData.value.package
+	);
+	if (foundPackage) {
+		const standardPremium = calculateStandardPremium();
+		return (
+			standardPremium +
+			(standardPremium * foundPackage.extraPercent) / 100
+		);
+	}
+	return 0;
+});
 </script>
 
 <template>
@@ -142,8 +182,11 @@ function submit(): void {
 				<MainForm
 					:data="formData"
 					:serverData="dataFromServer"
+					:standardPremium="standardPremium"
+					:finalPremium="finalPremium"
 					@goNext="goNext"
 					@goBack="goBack"
+					@handleDataChange="handleDataChange"
 				/>
 			</div>
 		</Transition>
@@ -155,6 +198,7 @@ function submit(): void {
 				<FormSummary
 					:data="formData"
 					:serverData="dataFromServer"
+					:finalPremium="finalPremium"
 					@buy="submit"
 					@goBack="goBack"
 				/>
