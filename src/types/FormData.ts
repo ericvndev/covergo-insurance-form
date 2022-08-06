@@ -1,5 +1,6 @@
 export default interface FormData {
 	name: string;
-	age: number;
+	age: number | null;
 	country: string;
+	package: string;
 }
