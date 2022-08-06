@@ -10,7 +10,7 @@ defineEmits<{
 
 <template>
 	<button
-		class="px-16 py-2 rounded"
+		class="px-16 py-2 rounded w-full sm:w-auto mb-2"
 		:class="{
 			'bg-black': type === 'primary',
 			'text-white': type === 'primary',

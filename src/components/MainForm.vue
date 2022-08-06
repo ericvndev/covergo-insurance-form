@@ -1,7 +1,17 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
+
+import FormButton from '@/components/forms/FormButton.vue';
+
 import type FormData from '@/types/FormData';
 import type ServerData from '@/types/ServerData';
-import FormButton from '@/components/forms/FormButton.vue';
+
+interface FormErrors {
+	hasErrors: boolean;
+	name: string;
+	age: string;
+	country: string;
+}
 
 const props = defineProps<{
 	data: FormData;
@@ -17,19 +27,52 @@ const emit = defineEmits<{
 	(e: 'calculateExtra', p: number): number;
 }>();
 
+const isSubmitted = ref<boolean>(false);
+
 function handleChange(e: Event) {
 	const name = (e.target as HTMLInputElement).name;
 	const newValue = (e.target as HTMLInputElement).value;
 	emit('handleDataChange', name, newValue);
 }
+
+function handleClickNext() {
+	isSubmitted.value = true;
+	if (!validationErrors.value.hasErrors) {
+		emit('goNext');
+	}
+}
+
+const validationErrors = computed((): FormErrors => {
+	const nameValidation = !props.data.name ? 'This field is required' : '';
+	let ageValidation = !props.data.age ? 'This field is required' : '';
+	ageValidation =
+		ageValidation ||
+		(!props.data.age || isNaN(props.data.age) || props.data.age < 0
+			? 'Not a valid age'
+			: '');
+
+	const countryValidation = !props.data.country
+		? 'This field is required'
+		: '';
+
+	return {
+		hasErrors: !!nameValidation || !!ageValidation || !!countryValidation,
+		name: nameValidation,
+		age: ageValidation,
+		country: countryValidation,
+	};
+});
 </script>
 <template>
 	<h2 class="text-3xl font-bold leading-7 mb-8">Tell us about yourself</h2>
-	<form>
-		<div>
+	<form @submit="(e) => e.preventDefault()">
+		<div class="mb-5">
 			<label for="name">Name <span class="text-red-600">*</span></label>
 			<input
-				class="w-full rounded mt-2 mb-5"
+				class="w-full rounded mt-2"
+				:class="{
+					'border-red-600': validationErrors.name && isSubmitted,
+				}"
 				type="text"
 				name="name"
 				id="name"
@@ -37,31 +80,43 @@ function handleChange(e: Event) {
 				:value="props.data.name"
 				@input="handleChange"
 			/>
+			<span
+				v-if="validationErrors.name && isSubmitted"
+				class="text-red-600 text-xs"
+				>{{ validationErrors.name }}</span
+			>
 		</div>
-		<div>
+		<div class="mb-5">
 			<label for="age">Age <span class="text-red-600">*</span></label>
 			<input
-				class="w-full rounded mt-2 mb-5"
-				type="tel"
+				class="w-full rounded mt-2"
+				:class="{
+					'border-red-600': validationErrors.age && isSubmitted,
+				}"
+				type="number"
 				name="age"
 				id="age"
 				placeholder="Tell us your age"
 				:value="props.data.age"
 				@input="handleChange"
 			/>
+			<span
+				v-if="validationErrors.age && isSubmitted"
+				class="text-red-600 text-xs"
+				>{{ validationErrors.age }}</span
+			>
 		</div>
 		<div>
 			<label for="country"
 				>Country <span class="text-red-600">*</span></label
 			>
 			<select
-				class="w-full rounded mt-2 mb-5"
+				class="select w-full rounded mt-2 mb-5"
 				name="country"
 				id="country"
 				:value="props.data.country"
 				@change="handleChange"
 			>
-				<option disabled value="">Where do you live?</option>
 				<option
 					v-for="country in (serverData || {}).countries"
 					v-bind:key="country.currencyCode"
@@ -111,11 +166,12 @@ function handleChange(e: Event) {
 		<div class="text-2xl font-bold">
 			Your premium is:
 			<span v-if="finalPremium"
-				>{{ finalPremium.toLocaleString('zh-hk') }}
-				{{ data.country.toUpperCase() }}</span
+				>{{ finalPremium.toLocaleString('zh-hk') }}&nbsp;{{
+					data.country.toUpperCase()
+				}}</span
 			>
 		</div>
-		<div class="flex justify-between mt-10">
+		<div class="flex flex-col justify-between mt-10 sm:flex-row">
 			<FormButton
 				:type="'secondary'"
 				:text="'Back'"
@@ -124,7 +180,7 @@ function handleChange(e: Event) {
 			<FormButton
 				:type="'primary'"
 				:text="'Next'"
-				@on-click="$emit('goNext')"
+				@on-click="handleClickNext"
 			/>
 		</div>
 	</form>

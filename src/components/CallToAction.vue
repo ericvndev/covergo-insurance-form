@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FormButton from '@/components/forms/FormButton.vue';
+
 defineEmits<{
 	(e: 'goNext'): number;
 	(e: 'goBack'): number;
@@ -13,5 +14,3 @@ defineEmits<{
 	</p>
 	<FormButton :type="'primary'" :text="'Start'" @on-click="$emit('goNext')" />
 </template>
-
-<style scoped></style>

@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+
 import CallToAction from '@/components/CallToAction.vue';
 import MainForm from '@/components/MainForm.vue';
 import FormSummary from '@/components/FormSummary.vue';
+import ErrorMessage from '@/components/ErrorMessage.vue';
+
 import type FormData from '@/types/FormData';
 import type ServerData from '@/types/ServerData';
+import type InsurancePackage from '@/types/InsurancePackage';
+import type Country from '@/types/Country';
 
 const router = useRouter();
 
@@ -46,17 +51,47 @@ const dataFromServer: ServerData = {
 	],
 };
 
-const step = ref<number>(-1);
-const formData = ref<FormData>({
+let defaultFormData: FormData = {
 	name: '',
 	age: null,
 	country: 'HKD',
 	package: 'standard',
-});
+};
+
+// Check for default form data from localStorage
+if (window.localStorage) {
+	const dataFromStorage = window.localStorage.getItem('data');
+
+	if (dataFromStorage) {
+		defaultFormData = JSON.parse(dataFromStorage);
+	}
+}
+
+const formData = ref<FormData>(defaultFormData);
+const step = ref<number>(-1);
 
 // Watch for route changes when user click Back button also
 watch(router.currentRoute, (currentRoute) => {
 	step.value = parseInt(currentRoute.query.step?.toString() || '0');
+});
+
+// Watch for form data changes and save it to localStorage
+watch(formData, (newFormData) => {
+	if (window.localStorage) {
+		window.localStorage.setItem('data', JSON.stringify(newFormData));
+	}
+});
+
+// Watch for step changes and reset formData to default
+watch(step, (newStep) => {
+	if (newStep === 0) {
+		formData.value = {
+			name: '',
+			age: null,
+			country: 'HKD',
+			package: 'standard',
+		};
+	}
 });
 
 onMounted(() => {
@@ -105,7 +140,8 @@ function goBack(): number {
 }
 
 function submit(): void {
-	alert('submitted');
+	step.value = 0;
+	router.push({ query: { step: step.value } });
 }
 
 function calculateStandardPremium(): number {
@@ -113,9 +149,7 @@ function calculateStandardPremium(): number {
 		return 0;
 	}
 	if (formData.value.age > 0 && formData.value.country) {
-		const country = dataFromServer.countries.find(
-			(country) => country.currencyCode === formData.value.country
-		);
+		const country = foundCountry.value;
 		if (country) {
 			return formData.value.age * 10 * country.exchangeRate;
 		}
@@ -123,22 +157,41 @@ function calculateStandardPremium(): number {
 	return 0;
 }
 
-const standardPremium = computed(() => {
-	return calculateStandardPremium();
+const foundCountry = computed((): Country | null => {
+	const country = dataFromServer.countries.find(
+		(country) => country.currencyCode === formData.value.country
+	);
+	return country || null;
 });
 
-const finalPremium = computed(() => {
+const foundPackage = computed((): InsurancePackage | null => {
 	const foundPackage = dataFromServer.packages.find(
 		(pk) => pk.id === formData.value.package
 	);
-	if (foundPackage) {
+	return foundPackage || null;
+});
+
+const standardPremium = computed((): number => {
+	return calculateStandardPremium();
+});
+
+const finalPremium = computed((): number => {
+	if (foundPackage.value) {
 		const standardPremium = calculateStandardPremium();
 		return (
 			standardPremium +
-			(standardPremium * foundPackage.extraPercent) / 100
+			(standardPremium * foundPackage.value.extraPercent) / 100
 		);
 	}
 	return 0;
+});
+
+const ageError = computed((): boolean => {
+	// Age is over 100
+	if ((formData.value.age || 0) > 100 && step.value === 2) {
+		return true;
+	}
+	return false;
 });
 </script>
 
@@ -147,14 +200,14 @@ const finalPremium = computed(() => {
 		<Transition>
 			<div
 				v-if="step === 0"
-				class="fixed transform top-1/2 -translate-x-1/2 left-1/2 -translate-y-1/2 px-8 py-20 sm:px-20 bg-gray-50 text-center w-11/12 max-w-2xl"
+				class="fixed transform top-1/2 -translate-x-1/2 left-1/2 -translate-y-1/2 px-8 py-16 sm:px-20 bg-gray-50 text-center w-11/12 max-w-2xl"
 			>
 				<CallToAction @goNext="goNext" />
 			</div>
 		</Transition>
 		<Transition>
 			<div
-				v-if="step > 0"
+				v-if="step > 0 && !ageError"
 				class="mx-auto max-w-lg w-11/12 flex justify-between absolute top-10 z-10 left-1/2 transform -translate-x-1/2"
 			>
 				<div
@@ -177,7 +230,7 @@ const finalPremium = computed(() => {
 		<Transition>
 			<div
 				v-if="step === 1"
-				class="mt-10 mx-auto px-20 py-20 bg-gray-50 w-11/12 max-w-lg"
+				class="mt-10 mx-auto px-8 sm:px-20 py-16 bg-gray-50 w-11/12 max-w-lg"
 			>
 				<MainForm
 					:data="formData"
@@ -193,11 +246,18 @@ const finalPremium = computed(() => {
 		<Transition>
 			<div
 				v-if="step === 2"
-				class="mt-10 mx-auto px-20 py-20 bg-gray-50 w-11/12 max-w-lg"
+				class="mt-10 mx-auto px-8 sm:px-20 py-16 bg-gray-50 w-11/12 max-w-lg"
 			>
+				<ErrorMessage
+					:errorMessage="'Your age is over our accepted limit.\nWe are sorry, we can not insure you now'"
+					@goBack="goBack"
+					v-if="ageError"
+				/>
 				<FormSummary
+					v-else
 					:data="formData"
-					:serverData="dataFromServer"
+					:foundCountry="foundCountry"
+					:foundPackage="foundPackage"
 					:finalPremium="finalPremium"
 					@buy="submit"
 					@goBack="goBack"
