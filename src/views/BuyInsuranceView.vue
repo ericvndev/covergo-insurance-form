@@ -51,6 +51,10 @@ const dataFromServer: ServerData = {
 	],
 };
 
+const step = ref<number>(
+	parseInt(router.currentRoute.value.query?.step?.toString() || '0')
+);
+
 let defaultFormData: FormData = {
 	name: '',
 	age: null,
@@ -68,12 +72,6 @@ if (window.localStorage) {
 }
 
 const formData = ref<FormData>(defaultFormData);
-const step = ref<number>(-1);
-
-// Watch for route changes when user click Back button also
-watch(router.currentRoute, (currentRoute) => {
-	step.value = parseInt(currentRoute.query.step?.toString() || '0');
-});
 
 // Watch for form data changes and save it to localStorage
 watch(formData, (newFormData) => {
@@ -94,15 +92,6 @@ watch(step, (newStep) => {
 	}
 });
 
-onMounted(() => {
-	const query = router.currentRoute.value.query;
-
-	// Delay a little bit for smooth transition at startup
-	setTimeout(() => {
-		step.value = parseInt(`${query.step || 0}`);
-	}, 300);
-});
-
 function handleDataChange(key: string, newValue: string | number): void {
 	formData.value = {
 		...formData.value,
@@ -117,16 +106,12 @@ function updateStep(isUp: boolean): number {
 	} else {
 		newValue -= 1;
 	}
+	// Make sure step value is not out of range
+	newValue = Math.max(Math.min(newValue, 2), 0);
+	step.value = newValue;
 
-	// Change back to -1 first to avoid animation glitch
-	step.value = -1;
-	setTimeout(() => {
-		// Make sure step value is not out of range
-		step.value = Math.max(Math.min(newValue, 2), 0);
-
-		// Push step query to browser history to keep user progress
-		router.push({ query: { step: step.value } });
-	}, 300);
+	// Push step query to browser history to keep user progress
+	router.push(`/buy-insurance?step=${step.value}`);
 
 	return newValue;
 }
@@ -141,7 +126,7 @@ function goBack(): number {
 
 function submit(): void {
 	step.value = 0;
-	router.push({ query: { step: step.value } });
+	router.push(`/buy-insurance`);
 }
 
 function calculateStandardPremium(): number {
@@ -230,7 +215,7 @@ const ageError = computed((): boolean => {
 		<Transition>
 			<div
 				v-if="step === 1"
-				class="mt-10 mx-auto px-8 sm:px-20 py-16 bg-gray-50 w-11/12 max-w-lg"
+				class="absolute left-1/2 transform -translate-x-1/2 t-0 mt-10 px-8 sm:px-20 py-16 bg-gray-50 w-11/12 max-w-lg"
 			>
 				<MainForm
 					:data="formData"
@@ -246,7 +231,7 @@ const ageError = computed((): boolean => {
 		<Transition>
 			<div
 				v-if="step === 2"
-				class="mt-10 mx-auto px-8 sm:px-20 py-16 bg-gray-50 w-11/12 max-w-lg"
+				class="absolute left-1/2 transform -translate-x-1/2 t-0 mt-10 px-8 sm:px-20 py-16 bg-gray-50 w-11/12 max-w-lg"
 			>
 				<ErrorMessage
 					:errorMessage="'Your age is over our accepted limit.\nWe are sorry, we can not insure you now'"

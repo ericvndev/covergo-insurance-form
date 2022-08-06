@@ -82,7 +82,7 @@ const validationErrors = computed((): FormErrors => {
 			/>
 			<span
 				v-if="validationErrors.name && isSubmitted"
-				class="text-red-600 text-xs"
+				class="text-red-600 text-xs error"
 				>{{ validationErrors.name }}</span
 			>
 		</div>
@@ -102,14 +102,14 @@ const validationErrors = computed((): FormErrors => {
 			/>
 			<span
 				v-if="validationErrors.age && isSubmitted"
-				class="text-red-600 text-xs"
+				class="text-red-600 text-xs error"
 				>{{ validationErrors.age }}</span
 			>
 		</div>
 		<div>
-			<label for="country"
-				>Country <span class="text-red-600">*</span></label
-			>
+			<label for="country">
+				Country <span class="text-red-600">*</span>
+			</label>
 			<select
 				class="select w-full rounded mt-2 mb-5"
 				name="country"
@@ -142,8 +142,8 @@ const validationErrors = computed((): FormErrors => {
 					:checked="props.data.package === pk.id"
 					@change="handleChange"
 				/>&nbsp;
-				<label :for="pk.id"
-					>{{ pk.name }}
+				<label :for="pk.id">
+					{{ pk.name }}
 					<div class="inline" v-if="!!pk.extraPercent">
 						<span v-if="!!standardPremium">
 							(<strong
@@ -165,11 +165,11 @@ const validationErrors = computed((): FormErrors => {
 		</div>
 		<div class="text-2xl font-bold">
 			Your premium is:
-			<span v-if="finalPremium"
-				>{{ finalPremium.toLocaleString('zh-hk') }}&nbsp;{{
+			<span v-if="finalPremium">
+				{{ finalPremium.toLocaleString('en-US') }}&nbsp;{{
 					data.country.toUpperCase()
-				}}</span
-			>
+				}}
+			</span>
 		</div>
 		<div class="flex flex-col justify-between mt-10 sm:flex-row">
 			<FormButton
