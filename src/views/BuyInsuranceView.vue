@@ -99,13 +99,9 @@ function handleDataChange(key: string, newValue: string | number): void {
 	};
 }
 
-function updateStep(isUp: boolean): number {
-	let newValue = step.value;
-	if (isUp) {
-		newValue += 1;
-	} else {
-		newValue -= 1;
-	}
+function updateStep(newStep: number): number {
+	let newValue = newStep;
+
 	// Make sure step value is not out of range
 	newValue = Math.max(Math.min(newValue, 2), 0);
 	step.value = newValue;
@@ -117,11 +113,11 @@ function updateStep(isUp: boolean): number {
 }
 
 function goNext(): number {
-	return updateStep(true);
+	return updateStep(step.value + 1);
 }
 
 function goBack(): number {
-	return updateStep(false);
+	return updateStep(step.value - 1);
 }
 
 function submit(): void {
@@ -235,7 +231,7 @@ const ageError = computed((): boolean => {
 			>
 				<ErrorMessage
 					:errorMessage="'Your age is over our accepted limit.\nWe are sorry, we can not insure you now'"
-					@goBack="goBack"
+					@updateStep="updateStep"
 					v-if="ageError"
 				/>
 				<FormSummary

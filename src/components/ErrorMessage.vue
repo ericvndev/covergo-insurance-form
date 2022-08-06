@@ -6,7 +6,7 @@ defineProps<{
 }>();
 
 defineEmits<{
-	(e: 'goBack'): number;
+	(e: 'updateStep', a: number): number;
 }>();
 </script>
 
@@ -17,7 +17,7 @@ defineEmits<{
 		<FormButton
 			:type="'primary'"
 			:text="'OK :('"
-			@on-click="$emit('goBack')"
+			@on-click="$emit('updateStep', 0)"
 		/>
 	</div>
 </template>
