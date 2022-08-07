@@ -2,8 +2,7 @@
 
 ## Video
 
-First of all, here is the link to the Youtube video where I explained more details about the solution:
-
+First of all, here is the link to the Youtube video where I explained more details about the solution: https://youtu.be/nrwf5c8pEQQ
 
 ## Technical stacks
 
