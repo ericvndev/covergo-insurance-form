@@ -47,7 +47,7 @@ const validationErrors = computed((): FormErrors => {
 	let ageValidation = !props.data.age ? 'This field is required' : '';
 	ageValidation =
 		ageValidation ||
-		(!props.data.age || isNaN(props.data.age) || props.data.age < 0
+		(!props.data.age || isNaN(props.data.age) || props.data.age <= 0
 			? 'Not a valid age'
 			: '');
 

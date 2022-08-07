@@ -14,7 +14,7 @@ For technical choices, although this is a just a simple exercise, I want to take
 - **TailwindCSS**
 - **Vitest** for unit testing (I think Jest will be more popular but Vitest is good enough).
 
-I'm new to all of this technologies so it's take me quite a time for both learning and coding at same time, but 3-days dealine is enough for me since I'm a fast learner. I also added **ESLint** to keep me from minor syntax errors and **Prettier** for auto formatting code.
+I'm new to all of these technologies so it's take me quite a time for both learning and coding at same time, but 3-days dealine is enough for me since I'm a fast learner. I also added **ESLint** to keep me from minor syntax errors and **Prettier** for auto formatting code.
 
 ## Architecture
 
